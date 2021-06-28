@@ -14,9 +14,13 @@ class ClassificationPipeline:
         """
         Constructs all instance attributes of the new class instance.
         """
-        self.preprocessor = PreProcessor()
-        self.classifier = RandomForestClassifier(n_estimators=10000, n_jobs=-1, ccp_alpha=0,
-                                                 max_features='auto', min_samples_leaf=2)
+        self.preprocessor = PreProcessor(feature_selection=False)
+        self.classifier = RandomForestClassifier(criterion="gini",
+                                                 n_estimators=10000,
+                                                 oob_score=True,
+                                                 ccp_alpha=.0007984414423046222,
+                                                 min_samples_leaf=3,
+                                                 n_jobs=-1)
 
     def fit(self, data: pd.DataFrame) -> dict:
         """
@@ -48,7 +52,7 @@ class ClassificationPipeline:
         y_pred = self.classifier.predict(x)
         return y_pred
 
-    def balanced_score(self, data: pd.DataFrame) -> dict:
+    def balanced_score(self, data: pd.DataFrame) -> float:
         """
         Applies prediction over the given data and returns the balanced accuracy of the prediction.
         Args:

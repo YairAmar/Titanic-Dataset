@@ -11,14 +11,18 @@ class PreProcessor:
     The PreProcessor is an transformer that applies all the needed steps in order to prepare the
     Titanic dataset to classification, while implementing an interface similar to the one in sklearn's transformers.
     """
-    def __init__(self):
+    def __init__(self, feature_selection: bool = True):
         """
         Constructs all instance attributes of the new class instance.
         """
         self.scaler = StandardScaler()
         self.encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
-        self.feature_selection_clf = LogisticRegression(C=1.59228279, solver='saga', max_iter=10000)
-        self.selector = RFECV(self.feature_selection_clf, min_features_to_select=12, scoring="balanced_accuracy")
+        if feature_selection:
+            self.feature_selection_clf = LogisticRegression(C=1.59228279, solver='saga', max_iter=10000)
+            self.selector = RFECV(self.feature_selection_clf, min_features_to_select=12, scoring="balanced_accuracy")
+            self.feature_selection = True
+        else:
+            self.feature_selection = False
 
     def fit_transform(self, data: pd.DataFrame) -> tuple:
         """
@@ -68,7 +72,8 @@ class PreProcessor:
 
         x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")] = self.scaler.transform(
             x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")], copy=False)
-        x, y = self._feature_selection(x, y, fit=fit)
+        if self.feature_selection:
+            x, y = self._feature_selection(x, y, fit=fit)
         return x, y
 
     @staticmethod

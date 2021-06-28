@@ -11,7 +11,8 @@ def main():
     train, test = load_data(sys.argv[1], sys.argv[2])
     classification_pipe = ClassificationPipeline()
     classification_pipe.fit(train)
-    print(classification_pipe.balanced_score(test))
+    print(f"The test score of a RandomForest without feature selection is: "
+          f"{classification_pipe.balanced_score(test):.3f}")
 
 
 if __name__ == "__main__":
