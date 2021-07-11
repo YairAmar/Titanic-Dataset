@@ -9,13 +9,16 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 class PreProcessor:
     """
     The PreProcessor is an transformer that applies all the needed steps in order to prepare the
-    Titanic dataset to classification, while implementing an interface similar to the one in sklearn's transformers.
+    Titanic dataset to classification, while implementing an interface similar to the one in sklearns' transformers.
     """
-    def __init__(self, feature_selection: bool = True):
+    def __init__(self, feature_selection: bool = True, tree_model: bool = True):
         """
         Constructs all instance attributes of the new class instance.
         """
-        self.scaler = StandardScaler()
+        if not tree_model:
+            self.scaler = StandardScaler()
+
+        self.tree_model = tree_model
         self.encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
         if feature_selection:
             self.feature_selection_clf = LogisticRegression(C=1.59228279, solver='saga', max_iter=10000)
@@ -53,7 +56,7 @@ class PreProcessor:
 
     def _fit_transform(self, data: pd.DataFrame, fit: bool = True) -> tuple:
         """
-        Applies bot functionalities of fit_transform and transform.
+        Applies both functionalities of fit_transform and transform.
         Args:
             data: input data
 
@@ -67,11 +70,13 @@ class PreProcessor:
         x = data.drop(["Survived"], axis=1)
         y = data["Survived"]
 
-        if fit:
-            self.scaler.fit(x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")])
+        if self.tree_model is False:
+            if fit:
+                self.scaler.fit(x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")])
 
-        x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")] = self.scaler.transform(
-            x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")], copy=False)
+            x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")] = self.scaler.transform(
+                x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")], copy=False)
+
         if self.feature_selection:
             x, y = self._feature_selection(x, y, fit=fit)
         return x, y
@@ -93,8 +98,7 @@ class PreProcessor:
         data.reset_index(inplace=True)
         return data
 
-    @staticmethod
-    def _insert_age_feature(data: pd.DataFrame) -> pd.DataFrame:
+    def _insert_age_feature(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Turning the contiguous feature "Age" into a categorical feature and into one-hot-vector
         Args:
@@ -103,17 +107,18 @@ class PreProcessor:
             data: input data with Age grouped into one-hot-vector
         """
         data["Age"].fillna(-1, inplace=True)  # unknown age = -1
-        category = pd.cut(data.Age, bins=[-2, 0, 2, 17, 30, 65, 100],
-                          labels=['Unknown', 'Toddler/baby', 'Child', 'Young_adult', 'Adult', 'Elderly'])
-        data.insert(6, 'Age_Group', category)
-        data['Age_Unknown'] = (data['Age_Group'] == 'Unknown').astype(int)
-        data['Age_Toddler'] = (data['Age_Group'] == 'Toddler/baby').astype(int)
-        data['Age_Child'] = (data['Age_Group'] == 'Child').astype(int)
-        data['Age_Young_adult'] = (data['Age_Group'] == 'Young_adult').astype(int)
-        data['Age_Adult'] = (data['Age_Group'] == 'Adult').astype(int)
-        data['Age_Elderly'] = (data['Age_Group'] == 'Elderly').astype(int)
-        data.drop(["Age"], axis=1, inplace=True)
-        data.drop(["Age_Group"], axis=1, inplace=True)
+        if self.tree_model is False:
+            category = pd.cut(data.Age, bins=[-2, 0, 2, 17, 30, 65, 100],
+                              labels=['Unknown', 'Toddler/baby', 'Child', 'Young_adult', 'Adult', 'Elderly'])
+            data.insert(6, 'Age_Group', category)
+            data['Age_Unknown'] = (data['Age_Group'] == 'Unknown').astype(int)
+            data['Age_Toddler'] = (data['Age_Group'] == 'Toddler/baby').astype(int)
+            data['Age_Child'] = (data['Age_Group'] == 'Child').astype(int)
+            data['Age_Young_adult'] = (data['Age_Group'] == 'Young_adult').astype(int)
+            data['Age_Adult'] = (data['Age_Group'] == 'Adult').astype(int)
+            data['Age_Elderly'] = (data['Age_Group'] == 'Elderly').astype(int)
+            data.drop(["Age"], axis=1, inplace=True)
+            data.drop(["Age_Group"], axis=1, inplace=True)
         return data
 
     @staticmethod
@@ -263,13 +268,16 @@ class PreProcessor:
             data: input data, after all feature manipulations applied in the preprocessing stage.
         """
         data = self._insert_age_feature(data)
-        data = self._insert_fare_feature(data)
         data = self._insert_family_size_feature(data)
-        data = self._insert_single_feature(data)
-        data = self._insert_lot_sib_feature(data)
-        data = self._insert_lot_child_feature(data)
-        data = self._insert_big_fam_feature(data)
-        data = self._insert_mid_class_q_feature(data)
+
+        if not self.tree_model:
+            data = self._insert_fare_feature(data)
+            data = self._insert_single_feature(data)
+            data = self._insert_lot_sib_feature(data)
+            data = self._insert_lot_child_feature(data)
+            data = self._insert_big_fam_feature(data)
+            data = self._insert_mid_class_q_feature(data)
+
         data = self._insert_title_feature(data)
         data = self._dummy_features(data, fit)
         return data
