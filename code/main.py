@@ -1,4 +1,6 @@
 import sys
+import argparse
+import pandas as pd
 from utils import load_data
 from pipeline import ClassificationPipeline
 
@@ -8,7 +10,7 @@ def main():
     Loads the train and test set, trains a classification pipeline on the training set
     and evaluates accuracy over the test set.
     """
-    train, test = load_data(sys.argv[1], sys.argv[2])
+    train, test = load_data()
     classification_pipe = ClassificationPipeline()
     train_score = classification_pipe.fit(train)
     print(f"The train score of a XGB without feature selection is: "
