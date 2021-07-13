@@ -2,7 +2,7 @@ import pandas as pd
 from preprocessing import PreProcessor
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from sklearn.metrics import balanced_accuracy_score
+from sklearn.metrics import get_scorer
 
 
 class ClassificationPipeline:
@@ -16,26 +16,16 @@ class ClassificationPipeline:
         """
         Constructs all instance attributes of the new class instance.
         """
-        self.preprocessor = PreProcessor(feature_selection=False,
-                                         tree_model=True)
+        self.preprocessor = PreProcessor(feature_selection=False, tree_model=True)
         if clf == "xgb":
-            self.classifier = XGBClassifier(learning_rate=0.01,
-                                            n_estimators=600,
-                                            max_depth=3,
-                                            subsample=0.85,
-                                            colsample_bytree=1,
-                                            gamma=1,
-                                            use_label_encoder=False)
+            self.classifier = XGBClassifier(learning_rate=0.01, n_estimators=600, max_depth=3, subsample=0.85,
+                                            colsample_bytree=1, gamma=1, use_label_encoder=False, verbosity=0)
 
         else:   # assuming rfc for now...
-            self.classifier = RandomForestClassifier(criterion="gini",
-                                                     n_estimators=1000,
-                                                     oob_score=True,
-                                                     ccp_alpha=.0007984414423046222,
-                                                     min_samples_leaf=4,
-                                                     n_jobs=-1)
+            self.classifier = RandomForestClassifier(criterion="gini", n_estimators=1000, oob_score=True,
+                                                     ccp_alpha=.0007984414423046222, min_samples_leaf=4, n_jobs=-1)
 
-    def fit(self, data: pd.DataFrame) -> float:
+    def fit(self, data: pd.DataFrame):
         """
         Fits the preprocessing and classification model over the given data.
         Args:
@@ -47,9 +37,6 @@ class ClassificationPipeline:
         """
         x, y = self.preprocessor.fit_transform(data)
         self.classifier.fit(x, y)
-        y_pred = self.classifier.predict(x)
-        balanced_accuracy = balanced_accuracy_score(y, y_pred)
-        return balanced_accuracy
 
     def predict(self, data: pd.DataFrame) -> dict:
         """
@@ -60,20 +47,20 @@ class ClassificationPipeline:
         Returns:
             balanced_accuracy: predicted labels.
         """
-        x, y = self.preprocessor.transform(data)
+        x, y = self.preprocessor.fit_transform(data, fit=False)
         y_pred = self.classifier.predict(x)
         return y_pred
 
-    def balanced_score(self, data: pd.DataFrame) -> float:
+    def score(self, data: pd.DataFrame, scoring_method: str = "balanced_accuracy") -> float:
         """
         Applies prediction over the given data and returns the balanced accuracy of the prediction.
         Args:
             data: input data to predict on.
+            scoring_method: supports all sklearns' scoring methods, as a string.
 
         Returns:
-            balanced_accuracy: balanced accuracy of the model in predicting over the given data.
+            score: models' score, according to the given method.
         """
-        x, y = self.preprocessor.transform(data)
-        y_pred = self.classifier.predict(x)
-        balanced_accuracy = balanced_accuracy_score(y, y_pred)
-        return balanced_accuracy
+        x, y = self.preprocessor.fit_transform(data, fit=False)
+        scorer = get_scorer(scoring_method)
+        return scorer(estimator=self.classifier, X=x, y_true=y)

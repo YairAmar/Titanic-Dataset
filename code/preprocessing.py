@@ -27,50 +27,27 @@ class PreProcessor:
         else:
             self.feature_selection = False
 
-    def fit_transform(self, data: pd.DataFrame) -> tuple:
+    def fit_transform(self, data: pd.DataFrame, fit: bool = True) -> tuple:
         """
         Fits the PreProcessor object (transformer) to the data, by constructing and fitting it's instance variables.
         After fitting it applies the whole pre-processing pipeline over the data.
+
         Args:
             data: input data
+            fit: whether to fit the transformers or only transform (default True).
 
         Returns:
             x: data ready to feed a classification model
             y: labels of the data
         """
-        x, y = self._fit_transform(data)
-        return x, y
+        data_copy = data.copy()
+        data_copy = self._clean_data(data_copy)
+        data_copy = self._insert_features(data_copy, fit)
+        # split the data into x and y
+        x = data_copy.drop(["Survived"], axis=1)
+        y = data_copy["Survived"]
 
-    def transform(self, data: pd.DataFrame) -> tuple:
-        """
-        Applies the whole pre-processing pipeline over the data.
-        Args:
-            data: input data
-
-        Returns:
-            x: data ready to feed a classification model
-            y: labels of the data
-        """
-        x, y = self._fit_transform(data, False)
-        return x, y
-
-    def _fit_transform(self, data: pd.DataFrame, fit: bool = True) -> tuple:
-        """
-        Applies both functionalities of fit_transform and transform.
-        Args:
-            data: input data
-
-        Returns:
-            x: data ready to feed a classification model
-            y: labels of the data
-        """
-        data = self._clean_data(data)
-        data = self._insert_features(data, fit)
-        # split the data into X and y
-        x = data.drop(["Survived"], axis=1)
-        y = data["Survived"]
-
-        if self.tree_model is False:
+        if not self.tree_model:
             if fit:
                 self.scaler.fit(x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")])
 
@@ -250,7 +227,6 @@ class PreProcessor:
             self.encoder.fit(data[["Embarked", "Title"]])
 
         one_hot_features = self.encoder.transform(data[["Embarked", "Title"]])
-
         column_names = self.encoder.get_feature_names(["Embarked", "Title"])
         one_hot_features = pd.DataFrame(one_hot_features, columns=column_names)
         data = data.join(one_hot_features)

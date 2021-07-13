@@ -1,6 +1,3 @@
-import sys
-import argparse
-import pandas as pd
 from utils import load_data
 from pipeline import ClassificationPipeline
 
@@ -12,11 +9,11 @@ def main():
     """
     train, test = load_data()
     classification_pipe = ClassificationPipeline()
-    train_score = classification_pipe.fit(train)
+    classification_pipe.fit(train)
     print(f"The train score of a XGB without feature selection is: "
-          f"{train_score:.3f}")
+          f"{classification_pipe.score(train):.3f}")
     print(f"The test score of a XGB without feature selection is: "
-          f"{classification_pipe.balanced_score(test):.3f}")
+          f"{classification_pipe.score(test):.3f}")
 
 
 if __name__ == "__main__":
