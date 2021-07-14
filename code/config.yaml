@@ -38,3 +38,7 @@ pipeline:
     gamma: 1
     use_label_encoder: False
     verbosity: 0
+
+main:
+  classificationpipeline_params:
+    clf: "xgb"
