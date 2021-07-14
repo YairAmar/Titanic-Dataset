@@ -2,6 +2,7 @@ preprocessing:
   y_column: "Survived"
   continuous_features: ["Family_Size", "SibSp", "Parch", "Pclass"]
   drop_parameters: ["Cabin", "Ticket"]
+  dropna_parameters: ["Embarked"]
 
   feature_selection_clf_params:
     C: 1.59228279

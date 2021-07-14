@@ -75,7 +75,7 @@ class PreProcessor:
         """
         config = read_config_file()
         data.drop(config["preprocessing"]["drop_parameters"], axis=1, inplace=True)
-        data.dropna(subset=["Embarked"], inplace=True)
+        data.dropna(subset=config["preprocessing"]["dropna_parameters"], inplace=True)
         data.reset_index(inplace=True)
         return data
 
