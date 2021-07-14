@@ -23,7 +23,7 @@ def load_data() -> tuple:
     return train, test
 
 
-def read_config_file() -> object:
+def read_config_file() -> dict:
     parser = argparse.ArgumentParser()
     parser.add_argument("--train_path", type=str, required=False)
     parser.add_argument("--test_path", type=str, required=False)
