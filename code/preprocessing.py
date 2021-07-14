@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import re
+from utils import read_config_file
 from sklearn.feature_selection import RFECV
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -15,14 +16,15 @@ class PreProcessor:
         """
         Constructs all instance attributes of the new class instance.
         """
+        config = read_config_file()
         if not tree_model:
             self.scaler = StandardScaler()
 
         self.tree_model = tree_model
-        self.encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+        self.encoder = OneHotEncoder(**config["preprocessing"]["onehotdncoder_params"])
         if feature_selection:
-            self.feature_selection_clf = LogisticRegression(C=1.59228279, solver='saga', max_iter=10000)
-            self.selector = RFECV(self.feature_selection_clf, min_features_to_select=12, scoring="balanced_accuracy")
+            self.feature_selection_clf = LogisticRegression(**config["preprocessing"]["feature_selection_clf_params"])
+            self.selector = RFECV(self.feature_selection_clf, **config["preprocessing"]["RFECV_params"])
             self.feature_selection = True
         else:
             self.feature_selection = False
@@ -44,15 +46,16 @@ class PreProcessor:
         data_copy = self._clean_data(data_copy)
         data_copy = self._insert_features(data_copy, fit)
         # split the data into x and y
-        x = data_copy.drop(["Survived"], axis=1)
-        y = data_copy["Survived"]
+        config = read_config_file()
+        x = data_copy.drop(config["preprocessing"]["y_column"], axis=1)
+        y = data_copy[config["preprocessing"]["y_column"]]
 
         if not self.tree_model:
             if fit:
-                self.scaler.fit(x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")])
+                self.scaler.fit(x.loc[:, config["preprocessing"]["continuous_features"]])
 
-            x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")] = self.scaler.transform(
-                x.loc[:, ("Family_Size", "SibSp", "Parch", "Pclass")], copy=False)
+            x.loc[:, config["preprocessing"]["continuous_features"]] = self.scaler.transform(
+                x.loc[:, config["preprocessing"]["continuous_features"]], copy=False)
 
         if self.feature_selection:
             x, y = self._feature_selection(x, y, fit=fit)
@@ -70,7 +73,8 @@ class PreProcessor:
         Returns:
             data: clean version of the input data
         """
-        data.drop(["Cabin", "Ticket"], axis=1, inplace=True)
+        config = read_config_file()
+        data.drop(config["preprocessing"]["drop_parameters"], axis=1, inplace=True)
         data.dropna(subset=["Embarked"], inplace=True)
         data.reset_index(inplace=True)
         return data

@@ -1,0 +1,40 @@
+preprocessing:
+  y_column: "Survived"
+  continuous_features: ["Family_Size", "SibSp", "Parch", "Pclass"]
+  drop_parameters: ["Cabin", "Ticket"]
+
+  feature_selection_clf_params:
+    C: 1.59228279
+    solver: 'saga'
+    max_iter: 10000
+
+  RFECV_params:
+    min_features_to_select: 12
+    scoring: "balanced_accuracy"
+
+  onehotdncoder_params:
+    sparse: False
+    handle_unknown: 'ignore'
+
+pipeline:
+  preprocessor_params:
+      feature_selection: False
+      tree_model: True
+
+  random_forest_params:
+    criterion: "gini"
+    n_estimators: 1000
+    oob_score: True
+    ccp_alpha: 0.0007984414423046222
+    min_samples_leaf: 4
+    n_jobs: -1
+
+  xgb_params:
+    learning_rate: 0.01
+    n_estimators: 600
+    max_depth: 3
+    subsample: 0.85
+    colsample_bytree: 1
+    gamma: 1
+    use_label_encoder: False
+    verbosity: 0

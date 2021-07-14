@@ -1,4 +1,5 @@
 import pandas as pd
+from utils import read_config_file
 from preprocessing import PreProcessor
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
@@ -16,14 +17,14 @@ class ClassificationPipeline:
         """
         Constructs all instance attributes of the new class instance.
         """
-        self.preprocessor = PreProcessor(feature_selection=False, tree_model=True)
+        config = read_config_file()
+        self.preprocessor = PreProcessor(**config["pipeline"]["preprocessor_params"])
+
         if clf == "xgb":
-            self.classifier = XGBClassifier(learning_rate=0.01, n_estimators=600, max_depth=3, subsample=0.85,
-                                            colsample_bytree=1, gamma=1, use_label_encoder=False, verbosity=0)
+            self.classifier = XGBClassifier(**config["pipeline"]["xgb_params"])
 
         else:   # assuming rfc for now...
-            self.classifier = RandomForestClassifier(criterion="gini", n_estimators=1000, oob_score=True,
-                                                     ccp_alpha=.0007984414423046222, min_samples_leaf=4, n_jobs=-1)
+            self.classifier = RandomForestClassifier(**config["pipeline"]["random_forest_params"])
 
     def fit(self, data: pd.DataFrame):
         """

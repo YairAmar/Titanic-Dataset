@@ -10,10 +10,8 @@ def main():
     train, test = load_data()
     classification_pipe = ClassificationPipeline()
     classification_pipe.fit(train)
-    print(f"The train score of a XGB without feature selection is: "
-          f"{classification_pipe.score(train):.3f}")
-    print(f"The test score of a XGB without feature selection is: "
-          f"{classification_pipe.score(test):.3f}")
+    print(f"Balanced accuracy over train set = {classification_pipe.score(train)*100:.2f}%")
+    print(f"Balanced accuracy over test set = {classification_pipe.score(test)*100:.2f}%")
 
 
 if __name__ == "__main__":
